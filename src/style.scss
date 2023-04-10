@@ -1,0 +1,43 @@
+body, html{
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    font-family: 'Roboto', sans-serif;
+
+    .webgl{
+        position: fixed;
+        top: 0;
+        left: 0;
+        outline: none;
+    }
+
+    .nav{
+        position: fixed;
+        display: flex;
+        justify-content: center;
+        bottom: 0;
+        left:0;
+        margin:0;
+        padding: 0;
+        width: 100%;
+
+        z-index:9999999999;
+        background:rgba(57, 57, 57, 0.595);
+
+        list-style-type:none;
+
+        li{
+            
+            a{
+                background: transparent;
+                padding: 2rem 4rem;
+                display: block;
+                border: 1px solid white;
+                margin: 10px;
+                color:white;
+                text-decoration: none;
+            }
+        }
+    }
+}
+

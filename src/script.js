@@ -2,7 +2,8 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import './style.css';
+import gsap from 'gsap';
+import './style.scss';
 
 //canvas
 const canvas = document.querySelector('canvas.webgl');
@@ -11,6 +12,59 @@ const canvas = document.querySelector('canvas.webgl');
 const sizes = {
     width: window.innerWidth,
     height: window.innerHeight
+}
+
+const equipment ={
+        name: 'M1A1 SEPV2',
+        filename: 'm1a1.glb',
+        type: 0,
+        path: '/',
+        scale: 1,
+        translate:{
+            x: 0,
+            y: 0,
+            z: 0
+        },
+        rotate:{
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    };
+
+const equipmentTypes ={
+    'ground': ['level','above'],
+    'air': ['level','below']
+}
+
+const views = {
+    'level': {
+        camera:{
+            translate:{
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            rotate:{
+                x: 0,
+                y: 0,
+                z: 0
+            }
+        },
+        model:{
+            translate:{
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            rotate:{
+                x: 0,
+                y: 0,
+                z: 0
+            }
+        }
+    },
+
 }
 
 //resize
@@ -83,12 +137,12 @@ environment.dispose();
 // mesh.position.y = 2;
 // scene.add(mesh)
 
-
+const group = new THREE.Group();
 
 //load gltf
 const loader = new GLTFLoader()
 loader.load(
-    'models/m1a1.glb',
+    `models/${equipment.filename}`,
     function (gltf) {
         // gltf.scene.traverse(function (child) {
         //     if ((child as THREE.Mesh).isMesh) {
@@ -104,17 +158,19 @@ loader.load(
         //         l.shadow.mapSize.height = 2048
         //     }
         // })
-        scene.add(gltf.scene)
+        console.log(gltf.scene);
+        gltf.scene.rotation.y = Math.PI /2;
+        group.add(gltf.scene)
     },
     (xhr) => {
-        console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+        //console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
     },
     (error) => {
         console.log(error)
     }
 )
 
-
+scene.add(group);
 
 
 //camera
@@ -146,3 +202,26 @@ const tick = () =>
 }
 
 tick()
+
+function above(){
+    console.log('above');
+    // camera.position.x = 0;
+    // camera.position.y = 20;
+    // camera.position.z = 10;
+    //camera.lookAt(group.position);
+    gsap.to(camera.position,{x:0,y: 30,z:10, duration: 2, delay: 0});
+    return false;
+}
+
+function level(){
+    console.log('level');
+    // camera.position.x = 0;
+    // camera.position.y = 3;
+    // camera.position.z = 10
+    // camera.lookAt(group.position);
+    gsap.to(camera.position,{x:0, y: 3, z:10, duration: 2, delay: 0});
+    return false;
+}
+
+document.querySelector('.above').addEventListener('click',above);
+document.querySelector('.level').addEventListener('click',level);
