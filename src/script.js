@@ -38,12 +38,12 @@ const equipmentTypes ={
 }
 
 const views = {
-    'level': {
+    above: {
         camera:{
-            translate:{
+            position:{
                 x: 0,
-                y: 0,
-                z: 0
+                y: 30,
+                z: 10
             },
             rotate:{
                 x: 0,
@@ -52,7 +52,7 @@ const views = {
             }
         },
         model:{
-            translate:{
+            position:{
                 x: 0,
                 y: 0,
                 z: 0
@@ -64,6 +64,32 @@ const views = {
             }
         }
     },
+    level: {
+        camera:{
+            position:{
+                x: 0,
+                y: 3,
+                z: 10
+            },
+            rotate:{
+                x: 0,
+                y: 0,
+                z: 0
+            }
+        },
+        model:{
+            position:{
+                x: 0,
+                y: 3,
+                z: 10
+            },
+            rotate:{
+                x: 0,
+                y: 0,
+                z: 0
+            }
+        }
+    }
 
 }
 
@@ -170,6 +196,7 @@ loader.load(
     }
 )
 
+//room for additional tranformation
 scene.add(group);
 
 
@@ -200,28 +227,35 @@ const tick = () =>
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)
 }
-
 tick()
 
+//view functions
 function above(){
     console.log('above');
-    // camera.position.x = 0;
-    // camera.position.y = 20;
-    // camera.position.z = 10;
-    //camera.lookAt(group.position);
-    gsap.to(camera.position,{x:0,y: 30,z:10, duration: 2, delay: 0});
+
+    gsap.to(camera.position,{
+        x: views.above.camera.position.x,
+        y: views.above.camera.position.y,
+        z: views.above.camera.position.z, 
+        duration: 2, 
+        delay: 0
+    });
     return false;
 }
 
 function level(){
-    console.log('level');
-    // camera.position.x = 0;
-    // camera.position.y = 3;
-    // camera.position.z = 10
-    // camera.lookAt(group.position);
-    gsap.to(camera.position,{x:0, y: 3, z:10, duration: 2, delay: 0});
+    console.log(views);
+
+    gsap.to(camera.position,{
+        x: views.level.camera.position.x,
+        y: views.level.camera.position.y,
+        z: views.level.camera.position.z, 
+        duration: 2, 
+        delay: 0
+    });
     return false;
 }
 
+//assign buttons
 document.querySelector('.above').addEventListener('click',above);
 document.querySelector('.level').addEventListener('click',level);
