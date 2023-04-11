@@ -200,6 +200,38 @@ loader.load(
 scene.add(group);
 
 
+// Create the ground plane
+const planeGeometry = new THREE.PlaneGeometry(200, 200, 1, 1);
+const planeMaterial = new THREE.MeshStandardMaterial({ color: 'blue' });
+const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+plane.rotation.x = -Math.PI / 2;
+scene.add(plane);
+
+
+// Create the cacti
+const cactusGeometry = new THREE.CylinderGeometry(0.5, 1, 3, 8);
+const cactusMaterial = new THREE.MeshStandardMaterial({ color: 'green' });
+for (let i = 0; i < 50; i++) {
+    const cactus = new THREE.Mesh(cactusGeometry, cactusMaterial);
+    cactus.position.x = Math.random() * 100 - 50;
+    cactus.position.z = Math.random() * 100 - 50;
+    cactus.position.y = 1.5;
+    cactus.rotation.y = Math.random() * Math.PI * 2;
+    scene.add(cactus);
+}
+
+// Create the rocks
+const rockGeometry = new THREE.IcosahedronGeometry(1, 0);
+const rockMaterial = new THREE.MeshStandardMaterial({ color: 0x8c8c8c });
+for (let i = 0; i < 100; i++) {
+    const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+    rock.position.x = Math.random() * 100 - 50;
+    rock.position.z = Math.random() * 100 - 50;
+    rock.position.y = 1;
+    scene.add(rock);
+}
+
+
 //camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
 camera.position.z = 10
@@ -207,8 +239,10 @@ camera.position.y = 3
 scene.add(camera)
 
 // Controls
-const controls = new OrbitControls(camera, canvas)
-controls.enableDamping = true
+const controls = new OrbitControls(camera, canvas);
+controls.enablePan = false;
+controls.enableDamping = true;
+controls.maxPolarAngle = Math.PI/2 - .05;
 
 
 //animate
