@@ -3,7 +3,12 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import gsap from 'gsap';
+import * as dat from 'lil-gui';
+
 import './style.scss';
+
+//debug
+const gui = new dat.GUI();
 
 //canvas
 const canvas = document.querySelector('canvas.webgl');
@@ -150,9 +155,19 @@ const environment = new RoomEnvironment();
 const pmremGenerator = new THREE.PMREMGenerator( renderer );
 
 
-scene.background = new THREE.Color( 0xbbbbbb );
+scene.background = new THREE.Color( '#a8f1ff' );
 scene.environment = pmremGenerator.fromScene( environment ).texture;
 environment.dispose();
+
+// Create a variable to store the background color
+var bgColor = { color: "#a8f1ff" };
+
+// Add the background color control to dat.gui
+gui.addColor( bgColor, 'color' ).onChange( function() {
+  // Set the background color of the scene to the new value
+  scene.background = new THREE.Color( bgColor.color );
+})
+    .name('Sky Color');
 
 /**
  * Object
@@ -198,14 +213,24 @@ loader.load(
 
 //room for additional tranformation
 scene.add(group);
+gui
+    .add(group.position,'y')
+    .min(-1)
+    .max(1)
+    .step(.01)
+    .name('Model Y');
 
 
 // Create the ground plane
 const planeGeometry = new THREE.PlaneGeometry(200, 200, 1, 1);
-const planeMaterial = new THREE.MeshStandardMaterial({ color: 'blue' });
+const planeMaterial = new THREE.MeshStandardMaterial({ color: '#29221e' });
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 plane.rotation.x = -Math.PI / 2;
 scene.add(plane);
+
+gui
+    .addColor(plane.material,'color')
+    .name('Ground Color');
 
 
 // Create the cacti
