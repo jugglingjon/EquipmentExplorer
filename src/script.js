@@ -327,7 +327,7 @@ light.shadow.mapSize.width = 1024;
 light.shadow.mapSize.height = 1024;
 light.shadow.bias = -0.001;
 light.shadow.camera.near = 0.1;
-light.shadow.camera.far = 100;
+light.shadow.camera.far = 200;
 scene.add( light );
 
 // Add a color control for the ground color
@@ -345,6 +345,24 @@ pointLightGUI
     .max(10)
     .step(.1)
     .name('Intensity');
+
+pointLightGUI
+    .add(light.position,'x')
+    .min(-50)
+    .max(50)
+    .step(.1)
+
+pointLightGUI
+    .add(light.position,'y')
+    .min(-50)
+    .max(50)
+    .step(.1)
+
+pointLightGUI
+    .add(light.position,'z')
+    .min(-50)
+    .max(50)
+    .step(.1)
 
 
 
@@ -430,6 +448,36 @@ modelGUI
  * SUPPORTING ELEMENTS
  */
 
+const cubeLoader = new THREE.CubeTextureLoader();
+const cubeTexture = cubeLoader.load([
+  '/textures/sky/px.png',
+  '/textures/sky/nx.png',
+  '/textures/sky/py.png',
+  '/textures/sky/ny.png',
+  '/textures/sky/pz.png',
+  '/textures/sky/nz.png'
+]);
+
+// Set the cube map texture's format
+
+cubeTexture.format = THREE.RGBAFormat;
+
+// Create the box geometry
+
+const skyGeometry = new THREE.BoxGeometry(100, 100, 100);
+
+// Create the material with the cube map texture applied
+
+const skyMaterial = new THREE.MeshBasicMaterial({
+  envMap: cubeTexture,
+  side: THREE.BackSide // render only the back faces of the cube
+});
+
+// Create the mesh and add it to the scene
+
+const skyMesh = new THREE.Mesh(skyGeometry, skyMaterial);
+scene.add(skyMesh);
+
 // Create the ground planes
 const planeGeometry = new THREE.PlaneGeometry(10, 10, 1200, 1200);
 planeGeometry.attributes.uv2 = planeGeometry.attributes.uv
@@ -451,7 +499,9 @@ plane.castShadow = true;
 plane.receiveShadow = true;
 scene.add(plane);
 
-const farPlaneGeometry = new THREE.PlaneGeometry(100, 100, 1, 1);
+
+//far plane
+const farPlaneGeometry = new THREE.PlaneGeometry(300, 300, 1, 1);
 farPlaneGeometry.attributes.uv2 = farPlaneGeometry.attributes.uv
 const farPlaneMaterial = new THREE.MeshStandardMaterial(
     {
@@ -568,7 +618,12 @@ loader.load('models/rocks/scene.gltf', result => {
 
 });
 
-
+//FOG
+scene.fog = new THREE.Fog(0xf0efd6,31, 63)
+scene.fog.nea
+environmentGUI.addColor(scene.fog,'color').name('fog color');
+environmentGUI.add(scene.fog,'near')
+environmentGUI.add(scene.fog,'far')
 // // Create the rocks
 // const rockGeometry = new THREE.IcosahedronGeometry(1, 0);
 // const rockMaterial = new THREE.MeshMatcapMaterial({ color: 0x8c8c8c });
@@ -590,7 +645,7 @@ loader.load('models/rocks/scene.gltf', result => {
  */
 
 //camera
-const camera = new THREE.PerspectiveCamera(60, sizes.width / sizes.height, 0.1, 100)
+const camera = new THREE.PerspectiveCamera(60, sizes.width / sizes.height, 0.1, 150)
 camera.position.z = 10
 camera.position.y = 3
 scene.add(camera)
