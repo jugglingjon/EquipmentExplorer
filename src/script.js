@@ -290,7 +290,13 @@ environmentGUI.addColor( bgColor, 'color' ).onChange( function() {
 // light.castShadow = true;
 // scene.add(light);
 
-const hemiLight = new THREE.HemisphereLight(0xa8f1ff, 0xfff4bd, 1.332);
+const ambientLight = new THREE.AmbientLight(0xeee4b4, .7)
+scene.add(ambientLight)
+const ambientLightGUI = lightGUI.addFolder('Ambient Light')
+ambientLightGUI.add(ambientLight,'intensity')
+ambientLightGUI.addColor(ambientLight,'color')
+
+const hemiLight = new THREE.HemisphereLight(0xfff4bd, 0xfff4bd, .184);
 scene.add(hemiLight);
 
 // Create a folder in dat.gui for the light properties
@@ -320,8 +326,8 @@ hemiLightGUI.add(hemiLight, 'intensity', 0, 4);
 
 const pointLightGUI = lightGUI.addFolder('Point Light');
 
-const light = new THREE.PointLight(0xf5bc8a,3.7);
-light.position.set(-50,30,50);
+const light = new THREE.PointLight(0xf5de8a,2.3);
+light.position.set(-50,36.9,50);
 light.castShadow = true;
 light.shadow.mapSize.width = 1024;
 light.shadow.mapSize.height = 1024;
@@ -619,7 +625,7 @@ loader.load('models/rocks/scene.gltf', result => {
 });
 
 //FOG
-scene.fog = new THREE.Fog(0xf0efd6,31, 63)
+scene.fog = new THREE.Fog(0xffecb8,31, 63)
 scene.fog.nea
 environmentGUI.addColor(scene.fog,'color').name('fog color');
 environmentGUI.add(scene.fog,'near')
