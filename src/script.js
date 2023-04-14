@@ -1,11 +1,15 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader'
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import gsap from 'gsap';
+import { TimelineMax } from 'gsap'
 import * as dat from 'lil-gui';
 
 import './style.scss';
+
 
 /* 
  * DEBUG
@@ -22,6 +26,13 @@ if(!debugMode){
     gui.domElement.style.display = 'none';
 }
 
+const parameters = {
+    report: () =>{
+        const { x, y, z } = camera.position;
+        console.log(`Camera position: x=${x}, y=${y}, z=${z}`);
+    }
+}
+gui.add(parameters,'report')
 /* 
  * VARIABLES
  */
@@ -255,7 +266,6 @@ function textureRepeat(farTextures,nearTextures){
 }
 textureRepeat([colorFarTexture,normalFarTexture,aoFarTexture],[bumpTexture,displacementTexture,aoTexture,normalTexture,glossTexture]);
 
-
 /* 
  * RENDERER
  */
@@ -388,25 +398,8 @@ pointLightGUI
 
 
 
-
-// const ambientLight = new THREE.AmbientLight(0xffffff, 0.1)
-// scene.add(ambientLight)
-
-// const pointLight = new THREE.PointLight(0xffffff, 3)
-// pointLight.position.x = 2
-// pointLight.position.y = 3
-// pointLight.position.z = 4
-// scene.add(pointLight)
-
-// lightGUI.add(ambientLight,'intensity',0,5,.01).name('Ambient Light Intensity');
-// lightGUI.add(pointLight.position,'x',-10,10,.1).name('Point Light X');
-// lightGUI.add(pointLight.position,'y',-10,10,.1).name('Point Light Y');
-// lightGUI.add(pointLight.position,'z',-10,10,.1).name('Point Light Z');
-// lightGUI.add(pointLight,'intensity',0,5,.01).name('Point Light Intensity');
-// lightGUI.addColor(pointLight,'color').name('Point Light Color');
-
 /**
- * Object
+ * OBJECTS
  */
 
 let group = new THREE.Group();
@@ -517,7 +510,7 @@ environmentGUI.add(planeMaterial,'displacementScale',0,2,.0001)
 
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 plane.rotation.x = -Math.PI / 2;
-plane.castShadow = true; 
+plane.castShadow = false; 
 plane.receiveShadow = true;
 scene.add(plane);
 
@@ -534,7 +527,7 @@ const farPlaneMaterial = new THREE.MeshStandardMaterial(
 );
 const farPlane = new THREE.Mesh(farPlaneGeometry, farPlaneMaterial);
 farPlane.rotation.x = -Math.PI / 2;
-farPlane.castShadow = true; 
+farPlane.castShadow = false; 
 farPlane.receiveShadow = true;
 scene.add(farPlane);
 
@@ -640,6 +633,46 @@ loader.load('models/rocks/scene.gltf', result => {
 
 });
 
+
+//TEXT
+const fontLoader = new FontLoader()
+fontLoader.load(
+    '/fonts/droid/droid_sans_bold.typeface.json',
+    (font)=>{
+        console.log(font);
+        const textGeometry = new TextGeometry(
+            'M1A1',
+            {
+                font,
+                size: 4,
+                height: 0.5,
+                curveSegments: 12,
+                bevelEnabled: true,
+                bevelThickness: 0.03,
+                bevelSize: 0.02,
+                bevelOffset: 0,
+                bevelSegments: 4
+
+            }
+        )
+        textGeometry.computeBoundingBox();
+        console.log(textGeometry.boundingBox);
+        const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+        const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
+        textGeometry.translate(-textWidth / 2, 0, 0);
+
+        const textMaterial = new THREE.MeshStandardMaterial({ color: 0x6d5026})
+        gui.addColor(textMaterial,'color')
+        textMaterial.opacity = .7
+        textMaterial.transparent = true
+        const textMesh = new THREE.Mesh(textGeometry,textMaterial)
+        textMesh.position.z = -12
+        //textMesh.castShadow = true
+        scene.add(textMesh)
+        
+    }
+)
+
 //FOG
 scene.fog = new THREE.Fog(0xffecb8,31, 63)
 scene.fog.nea
@@ -678,7 +711,7 @@ scene.add(camera)
 
 // Controls
 const controls = new OrbitControls(camera, canvas);
-controls.enablePan = false;
+controls.enablePan = true;
 controls.enableDamping = true;
 controls.maxPolarAngle = Math.PI/2 - .05;
 
@@ -732,6 +765,42 @@ function level(){
     return false;
 }
 
+
+function sweep(){
+    const timeline = new TimelineMax()
+    timeline.to(camera.position,{
+        x: -8,
+        y: 1.12,
+        z: 3.93, 
+        duration: 2, 
+        delay: 0
+    }).to(camera.position,{
+        x: -7,
+        y: 1.12,
+        z: 2.93, 
+        duration: 5, 
+        delay: 0
+    }).to(camera.position,{
+        x: 4.51,
+        y: 4.2,
+        z: 4.5, 
+        duration: 2, 
+        delay: 2
+    })
+    timeline.play()
+
+    // const timeline = new TimelineMax();
+
+    // // Add animations to the timeline
+    // timeline.to(mesh.position, 1, { x: 2 })
+    // .to(mesh.rotation, 1, { y: Math.PI / 2 })
+    // .to(mesh.scale, 1, { x: 2, y: 0.5, z: 0.5 });
+
+    // // Play the timeline
+    // timeline.play();
+    // return false;
+}
+
 //change model to selected
 function changeModel(event){
     //remove old model
@@ -758,6 +827,7 @@ function changeModel(event){
 //assign buttons
 document.querySelector('.above').addEventListener('click',above);
 document.querySelector('.level').addEventListener('click',level);
+document.querySelector('.sweep').addEventListener('click',sweep);
 
 //assign model change buttons
 document.querySelectorAll('.changeModel').forEach(function(element,index){
