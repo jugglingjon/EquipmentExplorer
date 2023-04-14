@@ -10,10 +10,17 @@ import './style.scss';
 /* 
  * DEBUG
  */
+const debugMode = window.location.hash.includes('debug');
+
 const gui = new dat.GUI();
 const lightGUI = gui.addFolder('Lights');
 const environmentGUI = gui.addFolder('Environment');
 const modelGUI = gui.addFolder('Model');
+
+if(!debugMode){
+    document.body.appendChild(gui.domElement);
+    gui.domElement.style.display = 'none';
+}
 
 /* 
  * VARIABLES
@@ -334,16 +341,17 @@ light.shadow.mapSize.height = 1024;
 light.shadow.bias = -0.001;
 light.shadow.camera.near = 0.1;
 light.shadow.camera.far = 200;
+light.shadow.radius = 5.7;
 scene.add( light );
 
 // Add a color control for the ground color
 const pointColor = {
     color: light.color.getHex()
-  };
-  
-  pointLightGUI.addColor(pointColor, 'color').onChange(() => {
-    light.color.set(pointColor.color);
-  }).name('Color');
+};
+
+pointLightGUI.addColor(pointColor, 'color').onChange(() => {
+    light.color.set(pointColor.color);  
+}).name('Color');
 
 pointLightGUI
     .add(light,'intensity')
@@ -369,6 +377,14 @@ pointLightGUI
     .min(-50)
     .max(50)
     .step(.1)
+
+
+pointLightGUI
+    .add(light.shadow,'radius')
+    .min(0)
+    .max(10)
+    .step(.1)
+
 
 
 
