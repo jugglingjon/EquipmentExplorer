@@ -258,8 +258,8 @@ function textureRepeat(farTextures,nearTextures){
 
     farTextures.forEach((farTexture)=>{
         console.log(farTexture)
-        farTexture.repeat.x = 10
-        farTexture.repeat.y = 10
+        farTexture.repeat.x = 30
+        farTexture.repeat.y = 30
         farTexture.wrapS = THREE.RepeatWrapping
         farTexture.wrapT = THREE.RepeatWrapping
     })
