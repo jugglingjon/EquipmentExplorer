@@ -531,6 +531,7 @@ farPlane.castShadow = false;
 farPlane.receiveShadow = true;
 scene.add(farPlane);
 
+
 environmentGUI
     .addColor(plane.material,'color')
     .name('Ground Color');
@@ -696,8 +697,40 @@ environmentGUI.add(scene.fog,'far')
 // }
 
 /* 
- * CAMERA
+ * INTERACTION
  */
+
+
+// create a Three.js raycaster
+const raycaster = new THREE.Raycaster();
+
+// add a click event listener to the renderer
+renderer.domElement.addEventListener('click', function(event) {
+
+  // calculate mouse position in normalized device coordinates
+  const mouse = new THREE.Vector2();
+  mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+  mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+  // cast a ray from the camera through the mouse position
+  raycaster.setFromCamera(mouse, camera);
+
+  // calculate objects intersecting the ray
+  const intersects = raycaster.intersectObjects(scene.children);
+
+  // check if the ray intersects with any meshes
+  if (intersects.length > 0) {
+    // trigger a click event on the first intersected mesh
+    intersects[0].object.dispatchEvent({ type: 'click' });
+  }
+
+});
+
+farPlane.addEventListener('click',()=>{
+    console.log('plane clicked')
+})
+
+
 
 //camera
 const camera = new THREE.PerspectiveCamera(60, sizes.width / sizes.height, 0.1, 150)
