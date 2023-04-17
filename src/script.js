@@ -2,8 +2,9 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import gsap from 'gsap';
 import { TimelineMax } from 'gsap'
 import * as dat from 'lil-gui';
@@ -418,10 +419,16 @@ pointLightGUI
  * OBJECTS
  */
 
-let group = new THREE.Group();
+const group = new THREE.Group();
 
 //gltf loader
 const loader = new GLTFLoader();
+
+//Provide a DRACOLoader instance to decode compressed mesh data
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath( '/examples/jsm/libs/draco/' );
+loader.setDRACOLoader( dracoLoader );
+
 
 function loadModel(){
     loader.load(
@@ -812,20 +819,37 @@ function sweep(){
 
 //change model to selected
 function changeModel(event){
-    //remove old model
-    scene.remove(group);
-    console.log(group);
-    group.traverse( function( child ) {
-        if ( child instanceof THREE.Mesh ) {
-            child.geometry.dispose();
-            child.material.dispose();
-        }
-    });
+    console.log(group.children[0].isGLTFModel)
 
-    //get new model id
-    currentEquipment = parseInt(event.target.getAttribute('data-model'));
+    for (let i = group.children.length - 1; i >= 0; i--) {
+        const child = group.children[i];
+
+        // Check if the child is a GLTF model
+        if (child.isGLTFModel) {
+            // Remove the child from the group and dispose of its geometry and material
+            group.remove(child);
+            child.scene.traverse(function (obj) {
+                if (obj.isMesh) {
+                    obj.geometry.dispose();
+                    obj.material.dispose();
+                }
+            });
+        }
+    }
+    //remove old model
+    // group.remove(group);
+
+    // group.traverse( function( child ) {
+    //     if ( child instanceof THREE.Mesh ) {
+    //         child.geometry.dispose();
+    //         child.material.dispose();
+    //     }
+    // });
+
+    // //get new model id
+    // currentEquipment = parseInt(event.target.getAttribute('data-model'));
     
-    loadModel();
+    // loadModel();
     return false;
 }
 
