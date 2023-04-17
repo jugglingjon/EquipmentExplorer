@@ -1,0 +1,11 @@
+Model Information:
+* title:	Ukrainian APC Vehicle BTR "Otaman"
+* source:	https://sketchfab.com/3d-models/ukrainian-apc-vehicle-btr-otaman-7db992dd324344f8a818aa7cc24e5bb8
+* author:	igor.tesV (https://sketchfab.com/igor.tesV)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Ukrainian APC Vehicle BTR "Otaman"" (https://sketchfab.com/3d-models/ukrainian-apc-vehicle-btr-otaman-7db992dd324344f8a818aa7cc24e5bb8) by igor.tesV (https://sketchfab.com/igor.tesV) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

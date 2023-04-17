@@ -62,7 +62,7 @@ const sizes = {
 }
 
 //currently displayed equipment
-let currentEquipment = 0;
+let currentEquipment = 1;
 
 //equipment data
 const equipment =[
@@ -79,7 +79,7 @@ const equipment =[
         },
         rotate:{
             x: 0,
-            y: 0,
+            y: .5,
             z: 0
         },
         scale:{
@@ -108,6 +108,28 @@ const equipment =[
             x: .01,
             y: .01,
             z: .01
+        }
+    },
+    {
+        name: 'Otaman',
+        filename: 'scene.gltf',
+        type: 0,
+        path: '/otaman',
+        scale: 1,
+        position:{
+            x: 0,
+            y: 0,
+            z: 0
+        },
+        rotate:{
+            x: 0,
+            y: 1.5,
+            z: 0
+        },
+        scale:{
+            x: 1,
+            y: 1,
+            z: 1
         }
     }
 ];
@@ -228,9 +250,7 @@ const particleTexture = textureLoader.load('/textures/particles/1.png')
 function textureRepeat(textureGroups){
     textureGroups.forEach(collection =>{
         
-        console.log(collection)
         collection.textures.forEach(texture=>{
-            console.log(texture)
             texture.repeat.x = collection.repeat
             texture.repeat.y = collection.repeat
             texture.wrapS = THREE.RepeatWrapping
@@ -423,7 +443,7 @@ function loadModel(){
             // })
             console.log(gltf.scene,currentEquipment);
 
-            gltf.scene.rotation.y = Math.PI /2;
+            gltf.scene.rotation.y = Math.PI * equipment[currentEquipment].rotate.y;
             gltf.scene.scale.set(
                 equipment[currentEquipment].scale.x,
                 equipment[currentEquipment].scale.y,
@@ -581,7 +601,7 @@ loader.load('models/rocks/scene.gltf', result => {
 
 //dust
 const dustGeometry = new THREE.BufferGeometry()
-const dustCount = 1000
+const dustCount = 2000
 const dustVertices = new Float32Array(dustCount * 3)
 
 for(let i=0;i<dustCount;i++){
@@ -592,7 +612,6 @@ for(let i=0;i<dustCount;i++){
     dustVertices[i3] = x
     dustVertices[i3+1] = y
     dustVertices[i3+2] = z
-    console.log(i,x,y,z)
 }
 dustGeometry.setAttribute( 'position', new THREE.BufferAttribute( dustVertices, 3 ) );
 dustGeometry.attributes.position.needsUpdate = true
@@ -613,7 +632,6 @@ const fontLoader = new FontLoader()
 fontLoader.load(
     '/fonts/droid/droid_sans_bold.typeface.json',
     (font)=>{
-        console.log(font);
         const textGeometry = new TextGeometry(
             'M1A1',
             {
@@ -630,7 +648,6 @@ fontLoader.load(
             }
         )
         textGeometry.computeBoundingBox();
-        console.log(textGeometry.boundingBox);
         const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
         const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
         textGeometry.translate(-textWidth / 2, 0, 0);
