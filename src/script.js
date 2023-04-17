@@ -376,8 +376,8 @@ scene.add( pointLight );
 const pointLightGUI = lightGUI.addFolder('Point Light');
 pointLightGUI.addColor(pointLight, 'color')
 
-const pointLightCameraHelper = new THREE.CameraHelper(pointLight.shadow.camera)
-scene.add(pointLightCameraHelper)
+// const pointLightCameraHelper = new THREE.CameraHelper(pointLight.shadow.camera)
+// scene.add(pointLightCameraHelper)
 
 pointLightGUI
     .add(pointLight,'intensity')
