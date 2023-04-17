@@ -8,6 +8,7 @@ import gsap from 'gsap';
 import { TimelineMax } from 'gsap'
 import * as dat from 'lil-gui';
 
+//Style Import
 import './style.scss';
 
 
@@ -16,23 +17,37 @@ import './style.scss';
  */
 const debugMode = window.location.hash.includes('debug');
 
+//create debug object and folders
 const gui = new dat.GUI();
 const lightGUI = gui.addFolder('Lights');
 const environmentGUI = gui.addFolder('Environment');
 const modelGUI = gui.addFolder('Model');
 
+//hide debug panel if not #debug
 if(!debugMode){
     document.body.appendChild(gui.domElement);
     gui.domElement.style.display = 'none';
 }
 
+//reports camera position
 const parameters = {
     report: () =>{
         const { x, y, z } = camera.position;
         console.log(`Camera position: x=${x}, y=${y}, z=${z}`);
+    },
+    toggleFog: ()=>{
+        if (scene.fog) {
+            // If fog is currently enabled, turn it off
+            scene.fog = null;
+        } else {
+            scene.fog = new THREE.Fog(0xffecb8,31, 53)
+        }
     }
 }
 gui.add(parameters,'report')
+gui.add(parameters, 'toggleFog')
+
+
 /* 
  * VARIABLES
  */
@@ -45,6 +60,8 @@ const sizes = {
     width: window.innerWidth,
     height: window.innerHeight
 }
+
+//currently displayed equipment
 let currentEquipment = 0;
 
 //equipment data
@@ -158,56 +175,13 @@ const views = {
 
 }
 
-/* 
- * RESIZE
- */
-//resize event
-window.addEventListener('resize', (e)=>{
-    //update sizes
-    sizes.width = window.innerWidth;
-    sizes.height = window.innerHeight;
 
-    //update camera
-    camera.aspect = sizes.width / sizes.height;
-    camera.updateProjectionMatrix();
-
-    //update renderer
-    renderer.setSize(sizes.width, sizes.height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-});
-
-//fullscreen
-window.addEventListener('dblclick', () =>
-{
-    const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement
-
-    if(!fullscreenElement)
-    {
-        if(canvas.requestFullscreen)
-        {
-            canvas.requestFullscreen()
-        }
-        else if(canvas.webkitRequestFullscreen)
-        {
-            canvas.webkitRequestFullscreen()
-        }
-    }
-    else
-    {
-        if(document.exitFullscreen)
-        {
-            document.exitFullscreen()
-        }
-        else if(document.webkitExitFullscreen)
-        {
-            document.webkitExitFullscreen()
-        }
-    }
-})
 
 /* 
  * LOADING
  */
+
+//Loading manager
 const loadingManager = new THREE.LoadingManager();
 
 loadingManager.onStart = () =>
@@ -234,10 +208,12 @@ loadingManager.onStart = () =>
 /* 
  * TEXTURES
  */
+
 const textureLoader = new THREE.TextureLoader(loadingManager)
 const colorTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_COL_2K.jpg')
 const colorFarTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_COL_2K.jpg')
 const bumpTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_BUMP_2K.jpg')
+const bumpFarTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_BUMP_2K.jpg')
 const displacementTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_DISP_2K.jpg')
 const aoTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_AO_2K.jpg')
 const aoFarTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_AO_2K.jpg')
@@ -246,29 +222,50 @@ const normalFarTexture = textureLoader.load('/textures/ground/GroundDirtRocky013
 const glossTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_GLOSS_2K.jpg')
 const matcapTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_Sphere.png')
 
-function textureRepeat(farTextures,nearTextures){
-
-    nearTextures.forEach((nearTexture)=>{
-        console.log(nearTexture)
-        nearTexture.repeat.x = 2
-        nearTexture.repeat.y = 2
-        nearTexture.wrapS = THREE.RepeatWrapping
-        nearTexture.wrapT = THREE.RepeatWrapping
-    })
-
-    farTextures.forEach((farTexture)=>{
-        console.log(farTexture)
-        farTexture.repeat.x = 30
-        farTexture.repeat.y = 30
-        farTexture.wrapS = THREE.RepeatWrapping
-        farTexture.wrapT = THREE.RepeatWrapping
+//repeats textures
+//acceps array of objects, each object contains array of textures, and the repeat counts for that collection
+function textureRepeat(textureGroups){
+    textureGroups.forEach(collection =>{
+        
+        console.log(collection)
+        collection.textures.forEach(texture=>{
+            console.log(texture)
+            texture.repeat.x = collection.repeat
+            texture.repeat.y = collection.repeat
+            texture.wrapS = THREE.RepeatWrapping
+            texture.wrapT = THREE.RepeatWrapping
+        })
     })
 }
-textureRepeat([colorFarTexture,normalFarTexture,aoFarTexture],[bumpTexture,displacementTexture,aoTexture,normalTexture,glossTexture]);
+
+//array of textures and their repeat properties
+const textureRepeats = [
+    {
+        textures: [
+            colorFarTexture,
+            normalFarTexture,
+            aoFarTexture,
+            bumpFarTexture
+        ],
+        repeat: 15
+    },
+    {
+        textures: [
+            bumpTexture,
+            displacementTexture,
+            aoTexture,
+            normalTexture,
+            glossTexture
+        ],
+        repeat: 2
+    }
+]
+textureRepeat(textureRepeats)
 
 /* 
  * RENDERER
  */
+
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas
 })
@@ -280,13 +277,10 @@ renderer.setPixelRatio(window.devicePixelRatio);
  * SCENE/ENVIRONMENT
  */
 const scene = new THREE.Scene()
-// const environment = new RoomEnvironment();
-// const pmremGenerator = new THREE.PMREMGenerator( renderer );
+
 
 //background
-scene.background = new THREE.Color( '#a8f1ff' );
-// scene.environment = pmremGenerator.fromScene( environment ).texture;
-// environment.dispose();
+scene.background = new THREE.Color( '#ffecb8' );
 
 // Create a variable to store the background color
 var bgColor = { color: "#a8f1ff" };
@@ -302,95 +296,96 @@ environmentGUI.addColor( bgColor, 'color' ).onChange( function() {
 /* 
  * LIGHTS
  */
-// const light = new THREE.DirectionalLight(0xffffff, 1);
-// light.position.set(0, 10, 0);
-// light.castShadow = true;
-// scene.add(light);
 
-const ambientLight = new THREE.AmbientLight(0xeee4b4, .7)
+// const directionalLight = new THREE.DirectionalLight('#f5de8a', 1);
+// directionalLight.position.set(-10, 10, 10);
+// directionalLight.castShadow = true;
+
+// scene.add(directionalLight);
+// directionalLight.shadow.camera.near = 3
+// directionalLight.shadow.camera.far = 40
+// directionalLight.shadow.camera.top = 15
+// directionalLight.shadow.camera.right = 30
+// directionalLight.shadow.camera.bottom = -15
+// directionalLight.shadow.camera.left = -30
+// directionalLight.shadow.mapSize.width = 2048
+// directionalLight.shadow.mapSize.height = 2048
+
+
+// const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight)
+// scene.add(directionalLightHelper)
+
+// const directionalLightGUI = lightGUI.addFolder('Directional Light');
+// directionalLightGUI.add(directionalLight,'intensity')
+// directionalLightGUI.addColor(directionalLight,'color')
+
+// const directionalLightCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera)
+// scene.add(directionalLightCameraHelper)
+
+const ambientLight = new THREE.AmbientLight(0xf5de8a, .7)
 scene.add(ambientLight)
 const ambientLightGUI = lightGUI.addFolder('Ambient Light')
 ambientLightGUI.add(ambientLight,'intensity')
 ambientLightGUI.addColor(ambientLight,'color')
 
-const hemiLight = new THREE.HemisphereLight(0xfff4bd, 0xfff4bd, .184);
-scene.add(hemiLight);
 
-// Create a folder in dat.gui for the light properties
-const hemiLightGUI = lightGUI.addFolder('Hemisphere Light');
+// const hemiLight = new THREE.HemisphereLight(0xfff4bd, 0xfff4bd, .184);
+// scene.add(hemiLight);
 
-// Add a color control for the sky color
-const skyColor = {
-  color: hemiLight.color.getHex()
-};
+// // Create a folder in dat.gui for the light properties
+// const hemiLightGUI = lightGUI.addFolder('Hemisphere Light');
+// hemiLightGUI.addColor(hemiLight,'color')
+// hemiLightGUI.addColor(hemiLight,'groundColor')
+// hemiLightGUI.add(hemiLight, 'intensity', 0, 4);
 
-hemiLightGUI.addColor(skyColor, 'color').onChange(() => {
-  hemiLight.color.set(skyColor.color);
-}).name('Sky');
 
-// Add a color control for the ground color
-const groundColor = {
-  color: hemiLight.groundColor.getHex()
-};
 
-hemiLightGUI.addColor(groundColor, 'color').onChange(() => {
-  hemiLight.groundColor.set(groundColor.color);
-}).name('Ground');
 
-// Add a slider control for the intensity
-hemiLightGUI.add(hemiLight, 'intensity', 0, 4);
-
+const pointLight = new THREE.PointLight(0xf5de8a,2);
+pointLight.position.set(-50,36.9,50);
+pointLight.castShadow = true;
+pointLight.shadow.mapSize.width = 2048;
+pointLight.shadow.mapSize.height = 2048;
+pointLight.shadow.bias = -0.001;
+pointLight.shadow.camera.near = 0.1;
+pointLight.shadow.camera.far = 200;
+pointLight.shadow.radius = 5.7;
+scene.add( pointLight );
 
 const pointLightGUI = lightGUI.addFolder('Point Light');
+pointLightGUI.addColor(pointLight, 'color')
 
-const light = new THREE.PointLight(0xf5de8a,2.3);
-light.position.set(-50,36.9,50);
-light.castShadow = true;
-light.shadow.mapSize.width = 1024;
-light.shadow.mapSize.height = 1024;
-light.shadow.bias = -0.001;
-light.shadow.camera.near = 0.1;
-light.shadow.camera.far = 200;
-light.shadow.radius = 5.7;
-scene.add( light );
-
-// Add a color control for the ground color
-const pointColor = {
-    color: light.color.getHex()
-};
-
-pointLightGUI.addColor(pointColor, 'color').onChange(() => {
-    light.color.set(pointColor.color);  
-}).name('Color');
+const pointLightCameraHelper = new THREE.CameraHelper(pointLight.shadow.camera)
+scene.add(pointLightCameraHelper)
 
 pointLightGUI
-    .add(light,'intensity')
+    .add(pointLight,'intensity')
     .min(0)
     .max(10)
     .step(.1)
     .name('Intensity');
 
 pointLightGUI
-    .add(light.position,'x')
+    .add(pointLight.position,'x')
     .min(-50)
     .max(50)
     .step(.1)
 
 pointLightGUI
-    .add(light.position,'y')
+    .add(pointLight.position,'y')
     .min(-50)
     .max(50)
     .step(.1)
 
 pointLightGUI
-    .add(light.position,'z')
+    .add(pointLight.position,'z')
     .min(-50)
     .max(50)
     .step(.1)
 
 
 pointLightGUI
-    .add(light.shadow,'radius')
+    .add(pointLight.shadow,'radius')
     .min(0)
     .max(10)
     .step(.1)
@@ -413,7 +408,7 @@ function loadModel(){
         function (gltf) {
             gltf.scene.traverse(function (child) {
                 if (child.isMesh) {
-                    child.receiveShadow = true
+                    child.receiveShadow = false
                     child.castShadow = true
                 }
             });
@@ -450,50 +445,17 @@ function loadModel(){
 }
 loadModel();
 
-//room for additional tranformation
 scene.add(group);
-modelGUI
-    .add(group.position,'y')
-    .min(-1)
-    .max(1)
-    .step(.01)
-    .name('Model Y');
+
 
 /* 
  * SUPPORTING ELEMENTS
  */
 
-const cubeLoader = new THREE.CubeTextureLoader();
-const cubeTexture = cubeLoader.load([
-  '/textures/sky/px.png',
-  '/textures/sky/nx.png',
-  '/textures/sky/py.png',
-  '/textures/sky/ny.png',
-  '/textures/sky/pz.png',
-  '/textures/sky/nz.png'
-]);
-
-// Set the cube map texture's format
-
-cubeTexture.format = THREE.RGBAFormat;
-
-// Create the box geometry
-
-const skyGeometry = new THREE.BoxGeometry(100, 100, 100);
-
-// Create the material with the cube map texture applied
-
-const skyMaterial = new THREE.MeshBasicMaterial({
-  envMap: cubeTexture,
-  side: THREE.BackSide // render only the back faces of the cube
-});
-
-// Create the mesh and add it to the scene
-
-const skyMesh = new THREE.Mesh(skyGeometry, skyMaterial);
-scene.add(skyMesh);
 
 // Create the ground planes
+
+//high detail ground plane
 const planeGeometry = new THREE.PlaneGeometry(10, 10, 1200, 1200);
 planeGeometry.attributes.uv2 = planeGeometry.attributes.uv
 const planeMaterial = new THREE.MeshStandardMaterial(
@@ -514,17 +476,26 @@ plane.castShadow = false;
 plane.receiveShadow = true;
 scene.add(plane);
 
+environmentGUI
+    .addColor(plane.material,'color')
+    .name('Ground Color');
 
-//far plane
-const farPlaneGeometry = new THREE.PlaneGeometry(300, 300, 1, 1);
+
+//low detail far plane
+const farPlaneGeometry = new THREE.PlaneGeometry(100, 100, 1, 1);
 farPlaneGeometry.attributes.uv2 = farPlaneGeometry.attributes.uv
+
 const farPlaneMaterial = new THREE.MeshStandardMaterial(
     {
         map: colorFarTexture,
         normalMap: normalFarTexture,
-        aoMap: aoFarTexture
+        aoMap: aoFarTexture,
+        bumpMap: bumpFarTexture,
+        roughness: 1
     }
 );
+// gui.add(farPlaneMaterial,'roughness')
+// gui.add(farPlaneMaterial,'metalness')
 const farPlane = new THREE.Mesh(farPlaneGeometry, farPlaneMaterial);
 farPlane.rotation.x = -Math.PI / 2;
 farPlane.castShadow = false; 
@@ -532,9 +503,7 @@ farPlane.receiveShadow = true;
 scene.add(farPlane);
 
 
-environmentGUI
-    .addColor(plane.material,'color')
-    .name('Ground Color');
+
 
 
 
@@ -547,32 +516,13 @@ Number.prototype.between = function(a, b) {
     return this > min && this < max;
 };
 
-// // Create the cacti
-// const cactusGeometry = new THREE.CylinderGeometry(0.5, 1, 3, 8);
-// const cactusMaterial = new THREE.MeshStandardMaterial({ color: 'green' });
-// cactusMaterial.roughness = .5;
-// for (let i = 0; i < 50; i++) {
-//     const cactus = new THREE.Mesh(cactusGeometry, cactusMaterial);
-//     cactus.position.x = Math.random() * 100 - 50;
-//     cactus.position.z = Math.random() * 100 - 50;
-//     cactus.position.y = 1.5;
-//     cactus.rotation.y = Math.random() * Math.PI * 2;
-    
-//     if ((cactus.position.x.between(-clearing,clearing))&& (cactus.position.z.between(-clearing,clearing))){
-        
-//     }
-//     else{
-//         scene.add(cactus);
-//     }
-// }
-
 //bushes
 loader.load('models/bush/scene.gltf', result => { 
     const bush = result.scene.children[0]; 
     bush.position.set(0,-5,-25);
     bush.traverse(n => { if ( n.isMesh ) {
         n.castShadow = true; 
-        n.receiveShadow = true;
+        n.receiveShadow = false;
         if(n.material.map) n.material.map.anisotropy = 1; 
     }});
     bush.scale.set(.01,.01,.01)
@@ -582,7 +532,7 @@ loader.load('models/bush/scene.gltf', result => {
         const bushClone = bush.clone();
         bushClone.position.x = Math.random() * 70 - 35;
         bushClone.position.z = Math.random() * 70 - 35;
-        //bushClone.rotation.y = Math.random() * Math.PI * 2;
+        bushClone.rotation.z = Math.random() * Math.PI * 2;
         
         if ((bushClone.position.x.between(-clearing,clearing))&& (bushClone.position.z.between(-clearing,clearing))){
             
@@ -591,12 +541,6 @@ loader.load('models/bush/scene.gltf', result => {
             scene.add(bushClone);
         }
     }
-
-    // var controller = gui.add(bush.scale,'x',0,10,.0001)
-    //     controller.onChange(function(value) {
-    //         bush.scale.y = value;
-    //         bush.scale.z = value;
-    // });
     scene.add(bush);
 
 });
@@ -607,7 +551,7 @@ loader.load('models/rocks/scene.gltf', result => {
     rock.position.set(0,-5,-25);
     rock.traverse(n => { if ( n.isMesh ) {
         n.castShadow = true; 
-        n.receiveShadow = true;
+        n.receiveShadow = false;
         if(n.material.map) n.material.map.anisotropy = 1; 
     }});
     rock.scale.set(.03,.03,.03)
@@ -621,7 +565,7 @@ loader.load('models/rocks/scene.gltf', result => {
         rockClone.scale.x = randomScale
         rockClone.scale.y = randomScale
         rockClone.scale.z = randomScale
-        //rockClone.rotation.y = Math.random() * Math.PI * 2;
+        rockClone.rotation.z = Math.random() * Math.PI * 2;
         
         if ((rockClone.position.x.between(-clearing,clearing))&& (rockClone.position.z.between(-clearing,clearing))){
             
@@ -633,6 +577,30 @@ loader.load('models/rocks/scene.gltf', result => {
 
 
 });
+
+//dust
+// const dustGeometry = new THREE.BufferGeometry()
+// const dustCount = 200
+// const dustVertices = new Float32Array(dustCount * 3)
+
+// for(let i=0;i<dustCount;i++){
+//     const i3 = i * 3
+//     const x = (Math.random() - .5) * 100
+//     const y = Math.random()
+//     const z = (Math.random() - .5) * 100
+//     dustVertices[i3] = x
+//     dustVertices[i3+1] = y
+//     dustVertices[i3+2] = z
+//     console.log(i,x,y,z)
+// }
+// dustGeometry.setAttribute( 'position', new THREE.BufferAttribute( dustVertices, 3 ) );
+// dustGeometry.attributes.position.needsUpdate = true
+
+// const dustMaterial = new THREE.PointsMaterial()
+// dustMaterial.size = .05
+// const dust = new THREE.Points(dustGeometry,dustMaterial)
+// // dust.rotation.x = Math.PI / 2
+// scene.add(dust);
 
 
 //TEXT
@@ -665,36 +633,23 @@ fontLoader.load(
         const textMaterial = new THREE.MeshStandardMaterial({ color: 0x6d5026})
         gui.addColor(textMaterial,'color')
         textMaterial.opacity = .7
-        textMaterial.transparent = true
+        //textMaterial.transparent = true
         const textMesh = new THREE.Mesh(textGeometry,textMaterial)
         textMesh.position.z = -12
-        //textMesh.castShadow = true
+        textMesh.castShadow = true
         scene.add(textMesh)
         
     }
 )
 
+
 //FOG
-scene.fog = new THREE.Fog(0xffecb8,31, 63)
-scene.fog.nea
+
+scene.fog = new THREE.Fog(0xffecb8,31, 53)
 environmentGUI.addColor(scene.fog,'color').name('fog color');
 environmentGUI.add(scene.fog,'near')
 environmentGUI.add(scene.fog,'far')
-// // Create the rocks
-// const rockGeometry = new THREE.IcosahedronGeometry(1, 0);
-// const rockMaterial = new THREE.MeshMatcapMaterial({ color: 0x8c8c8c });
-// for (let i = 0; i < 100; i++) {
-//     const rock = new THREE.Mesh(rockGeometry, rockMaterial);
-//     rock.position.x = Math.random() * 100 - 50;
-//     rock.position.z = Math.random() * 100 - 50;
-//     rock.position.y = 1;
-//     if ((rock.position.x.between(-clearing,clearing))&& (rock.position.z.between(-clearing,clearing))){
-        
-//     }
-//     else{
-//         scene.add(rock);
-//     }
-// }
+
 
 /* 
  * INTERACTION
@@ -761,6 +716,14 @@ const tick = () =>
     // Update controls
     controls.update()
 
+    //update dust
+    // for(let i=0; i<dustCount; i++){
+    //     const i3 = i*3
+    //     dustGeometry.attributes.position.array[i3+1] = (Math.sin(.1*elapsedTime)*3 + Math.sin(.5*elapsedTime))
+    // }
+    // dustGeometry.attributes.position.needsUpdate = true
+
+
     // Render
     renderer.render(scene, camera)
 
@@ -821,17 +784,6 @@ function sweep(){
         delay: 2
     })
     timeline.play()
-
-    // const timeline = new TimelineMax();
-
-    // // Add animations to the timeline
-    // timeline.to(mesh.position, 1, { x: 2 })
-    // .to(mesh.rotation, 1, { y: Math.PI / 2 })
-    // .to(mesh.scale, 1, { x: 2, y: 0.5, z: 0.5 });
-
-    // // Play the timeline
-    // timeline.play();
-    // return false;
 }
 
 //change model to selected
@@ -868,3 +820,52 @@ document.querySelectorAll('.changeModel').forEach(function(element,index){
         changeModel(e);
     })
 });
+
+
+/* 
+ * RESIZE
+ */
+
+//resize event
+window.addEventListener('resize', (e)=>{
+    //update sizes
+    sizes.width = window.innerWidth;
+    sizes.height = window.innerHeight;
+
+    //update camera
+    camera.aspect = sizes.width / sizes.height;
+    camera.updateProjectionMatrix();
+
+    //update renderer
+    renderer.setSize(sizes.width, sizes.height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+});
+
+//fullscreen
+window.addEventListener('dblclick', () =>
+{
+    const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement
+
+    if(!fullscreenElement)
+    {
+        if(canvas.requestFullscreen)
+        {
+            canvas.requestFullscreen()
+        }
+        else if(canvas.webkitRequestFullscreen)
+        {
+            canvas.webkitRequestFullscreen()
+        }
+    }
+    else
+    {
+        if(document.exitFullscreen)
+        {
+            document.exitFullscreen()
+        }
+        else if(document.webkitExitFullscreen)
+        {
+            document.webkitExitFullscreen()
+        }
+    }
+})
