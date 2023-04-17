@@ -221,6 +221,7 @@ const normalTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_NR
 const normalFarTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_NRM_2K.jpg')
 const glossTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_GLOSS_2K.jpg')
 const matcapTexture = textureLoader.load('/textures/ground/GroundDirtRocky013_Sphere.png')
+const particleTexture = textureLoader.load('/textures/particles/1.png')
 
 //repeats textures
 //acceps array of objects, each object contains array of textures, and the repeat counts for that collection
@@ -579,28 +580,32 @@ loader.load('models/rocks/scene.gltf', result => {
 });
 
 //dust
-// const dustGeometry = new THREE.BufferGeometry()
-// const dustCount = 200
-// const dustVertices = new Float32Array(dustCount * 3)
+const dustGeometry = new THREE.BufferGeometry()
+const dustCount = 1000
+const dustVertices = new Float32Array(dustCount * 3)
 
-// for(let i=0;i<dustCount;i++){
-//     const i3 = i * 3
-//     const x = (Math.random() - .5) * 100
-//     const y = Math.random()
-//     const z = (Math.random() - .5) * 100
-//     dustVertices[i3] = x
-//     dustVertices[i3+1] = y
-//     dustVertices[i3+2] = z
-//     console.log(i,x,y,z)
-// }
-// dustGeometry.setAttribute( 'position', new THREE.BufferAttribute( dustVertices, 3 ) );
-// dustGeometry.attributes.position.needsUpdate = true
+for(let i=0;i<dustCount;i++){
+    const i3 = i * 3
+    const x = (Math.random() - .5) * 100
+    const y = Math.random()
+    const z = (Math.random() - .5) * 100
+    dustVertices[i3] = x
+    dustVertices[i3+1] = y
+    dustVertices[i3+2] = z
+    console.log(i,x,y,z)
+}
+dustGeometry.setAttribute( 'position', new THREE.BufferAttribute( dustVertices, 3 ) );
+dustGeometry.attributes.position.needsUpdate = true
 
-// const dustMaterial = new THREE.PointsMaterial()
-// dustMaterial.size = .05
-// const dust = new THREE.Points(dustGeometry,dustMaterial)
-// // dust.rotation.x = Math.PI / 2
-// scene.add(dust);
+const dustMaterial = new THREE.PointsMaterial()
+dustMaterial.color = new THREE.Color(0xf5de8a)
+dustMaterial.alphaMap = particleTexture
+dustMaterial.transparent = true
+dustMaterial.depthWrite = false
+dustMaterial.size = .1
+const dust = new THREE.Points(dustGeometry,dustMaterial)
+// dust.rotation.x = Math.PI / 2
+scene.add(dust);
 
 
 //TEXT
@@ -708,6 +713,7 @@ controls.maxPolarAngle = Math.PI/2 - .05;
  * ANIMATION
  */
 const clock = new THREE.Clock()
+const originalDustVertices = dustVertices.slice(0)
 
 const tick = () =>
 {
@@ -717,12 +723,13 @@ const tick = () =>
     controls.update()
 
     //update dust
-    // for(let i=0; i<dustCount; i++){
-    //     const i3 = i*3
-    //     dustGeometry.attributes.position.array[i3+1] = (Math.sin(.1*elapsedTime)*3 + Math.sin(.5*elapsedTime))
-    // }
-    // dustGeometry.attributes.position.needsUpdate = true
-
+    for(let i=0; i<dustCount; i++){
+        const i3 = i*3
+        const offset = dustGeometry.attributes.position.array[i3]
+        dustGeometry.attributes.position.array[i3+1] = originalDustVertices[i3+1]*.5 +(Math.sin(.1*elapsedTime + offset) + Math.sin(.5*elapsedTime + offset))
+    }
+    dustGeometry.attributes.position.needsUpdate = true
+    dust.rotation.y = .3 * elapsedTime
 
     // Render
     renderer.render(scene, camera)
