@@ -62,7 +62,7 @@ const sizes = {
 }
 
 //currently displayed equipment
-let currentEquipment = 1;
+let currentEquipment = 0;
 
 //equipment data
 const equipment =[
