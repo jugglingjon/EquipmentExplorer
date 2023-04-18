@@ -68,7 +68,7 @@ let currentEquipment = 0;
 //equipment data
 const equipment =[
     {
-        name: 'M1A1 SEPV2',
+        name: 'M1A1',
         filename: 'm1a1.glb',
         type: 0,
         path: '/m1a1',
@@ -112,14 +112,36 @@ const equipment =[
         }
     },
     {
-        name: 'Otaman',
-        filename: 'scene.gltf',
+        name: 'F-14',
+        filename: 'f14.glb',
         type: 0,
-        path: '/otaman',
+        path: '/f14',
+        scale: 1,
+        position:{
+            x: 7,
+            y: -2.5,
+            z: 0
+        },
+        rotate:{
+            x: 0,
+            y: 1,
+            z: 0
+        },
+        scale:{
+            x: .05,
+            y: .05,
+            z: .05
+        }
+    },
+    {
+        name: 'HIND',
+        filename: 'hind.glb',
+        type: 0,
+        path: '/hind',
         scale: 1,
         position:{
             x: 0,
-            y: 0,
+            y: .45,
             z: 0
         },
         rotate:{
@@ -128,9 +150,9 @@ const equipment =[
             z: 0
         },
         scale:{
-            x: 1,
-            y: 1,
-            z: 1
+            x: .01,
+            y: .01,
+            z: .01
         }
     }
 ];
@@ -488,6 +510,9 @@ function loadModel(callback) {
 
         //add to scene
         scene.add(model);
+
+        //change text
+        loadText()
         
         
     },
@@ -661,40 +686,50 @@ scene.add(dust);
 
 //TEXT
 const fontLoader = new FontLoader()
-fontLoader.load(
-    '/fonts/droid/droid_sans_bold.typeface.json',
-    (font)=>{
-        const textGeometry = new TextGeometry(
-            'M1A1',
-            {
-                font,
-                size: 4,
-                height: 0.5,
-                curveSegments: 12,
-                bevelEnabled: true,
-                bevelThickness: 0.03,
-                bevelSize: 0.02,
-                bevelOffset: 0,
-                bevelSegments: 4
+let text = null
 
+function loadText(){
+    fontLoader.load(
+        '/fonts/droid/droid_sans_bold.typeface.json',
+        (font)=>{
+            if (text !== null){
+                scene.remove(text)
+                text.material.dispose()
+                text.geometry.dispose()
             }
-        )
-        textGeometry.computeBoundingBox();
-        const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
-        const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
-        textGeometry.translate(-textWidth / 2, 0, 0);
+            const textGeometry = new TextGeometry(
+                equipment[currentEquipment].name,
+                {
+                    font,
+                    size: 4,
+                    height: 0.5,
+                    curveSegments: 12,
+                    bevelEnabled: true,
+                    bevelThickness: 0.03,
+                    bevelSize: 0.02,
+                    bevelOffset: 0,
+                    bevelSegments: 4
 
-        const textMaterial = new THREE.MeshStandardMaterial({ color: 0x6d5026})
-        gui.addColor(textMaterial,'color')
-        textMaterial.opacity = .7
-        //textMaterial.transparent = true
-        const textMesh = new THREE.Mesh(textGeometry,textMaterial)
-        textMesh.position.z = -12
-        textMesh.castShadow = true
-        scene.add(textMesh)
-        
-    }
-)
+                }
+            )
+            textGeometry.computeBoundingBox();
+            const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+            const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
+            textGeometry.translate(-textWidth / 2, 0, 0);
+
+            const textMaterial = new THREE.MeshStandardMaterial({ color: 0x6d5026})
+            gui.addColor(textMaterial,'color')
+            textMaterial.opacity = .7
+            //textMaterial.transparent = true
+            const textMesh = new THREE.Mesh(textGeometry,textMaterial)
+            textMesh.position.z = -12
+            textMesh.castShadow = true
+            text = textMesh
+            scene.add(text)
+            
+        }
+    )
+}
 
 
 //FOG
