@@ -656,22 +656,21 @@ loader.load('models/rocks/scene.gltf', result => {
 
 });
 
-//tent
-loader.load('models/building/building.glb', result => { 
-    const tent = result.scene.children[0]; 
-    tent.position.set(0,-5,-25);
-    tent.traverse(n => { if ( n.isMesh ) {
-        n.castShadow = true; 
-        n.receiveShadow = false;
-        if(n.material.map) n.material.map.anisotropy = 1; 
-    }});
-    tent.scale.set(.6,.6,.6)
-    tent.position.set(-15,-.1,-25)
-    tent.rotation.z = -1.9
-    gui.add(tent.rotation,'z')
-    scene.add(tent);
-
-});
+// //tent
+// loader.load('models/building/building.glb', result => { 
+//     const tent = result.scene.children[0]; 
+//     tent.position.set(0,-5,-25);
+//     tent.traverse(n => { if ( n.isMesh ) {
+//         n.castShadow = true; 
+//         n.receiveShadow = false;
+//         if(n.material.map) n.material.map.anisotropy = 1; 
+//     }});
+//     tent.scale.set(.6,.6,.6)
+//     tent.position.set(-15,-.1,-25)
+//     tent.rotation.z = -1.9
+//     gui.add(tent.rotation,'z')
+//     scene.add(tent);
+// });
 
 //dust
 const dustGeometry = new THREE.BufferGeometry()
