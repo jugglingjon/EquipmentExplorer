@@ -90,10 +90,10 @@ const equipment =[
         }
     },
     {
-        name: 'HIND',
-        filename: 'scene.gltf',
+        name: 'M1126',
+        filename: 'm1126.glb',
         type: 0,
-        path: '/hind',
+        path: '/m1126',
         scale: 1,
         position:{
             x: 0,
@@ -102,13 +102,13 @@ const equipment =[
         },
         rotate:{
             x: 0,
-            y: 0,
+            y: .5,
             z: 0
         },
         scale:{
-            x: .01,
-            y: .01,
-            z: .01
+            x: .6,
+            y: .6,
+            z: .6
         }
     },
     {
@@ -419,7 +419,8 @@ pointLightGUI
  * OBJECTS
  */
 
-const group = new THREE.Group();
+
+let model = null
 
 //gltf loader
 const loader = new GLTFLoader();
@@ -429,55 +430,79 @@ const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath( '/examples/jsm/libs/draco/' );
 loader.setDRACOLoader( dracoLoader );
 
+//loads model
+function loadModel(callback) {
+    //remove old model if exists
+    if (model !== null){
+        scene.remove(model);
+        model.traverse(function(child) {
+            if (child instanceof THREE.Mesh) {
+                child.geometry.dispose();
+                child.material.dispose();
+                if(child.material.map) child.material.map.dispose();
+                if(child.material.aoMap) child.material.aoMap.dispose();
+                if(child.material.displacementMap) child.material.displacementMap.dispose();
+                if(child.material.normalMap) child.material.normalMap.dispose();
+                if(child.material.bumpMap) child.material.bumpMap.dispose();
+                if(child.material.alphaMap) child.material.alphaMap.dispose();
+                if(child.material.roughnessMap) child.material.roughnessMap.dispose();
+                if(child.material.metalnessMap) child.material.metalnessMap.dispose();
+            }
+        }) 
+    }
 
-function loadModel(){
-    loader.load(
-        `models${equipment[currentEquipment].path}/${equipment[currentEquipment].filename}`,
-        function (gltf) {
-            gltf.scene.traverse(function (child) {
-                if (child.isMesh) {
-                    child.receiveShadow = false
-                    child.castShadow = true
-                }
-            });
-            //     if (((child as THREE.Light)).isLight) {
-            //         const l = (child as THREE.Light)
-            //         l.castShadow = true
-            //         l.shadow.bias = -.003
-            //         l.shadow.mapSize.width = 2048
-            //         l.shadow.mapSize.height = 2048
-            //     }
-            // })
-            console.log(gltf.scene,currentEquipment);
+    //set url
+    const url = `models${equipment[currentEquipment].path}/${equipment[currentEquipment].filename}`
 
-            gltf.scene.rotation.y = Math.PI * equipment[currentEquipment].rotate.y;
-            gltf.scene.scale.set(
-                equipment[currentEquipment].scale.x,
-                equipment[currentEquipment].scale.y,
-                equipment[currentEquipment].scale.z
-            )
-            gltf.scene.position.set(
-                equipment[currentEquipment].position.x,
-                equipment[currentEquipment].position.y,
-                equipment[currentEquipment].position.z
-            )
-            group.add(gltf.scene)
-        },
-        (xhr) => {
-            //console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-        },
-        (error) => {
-            console.log(error)
-        }
-    )
+    //load model
+    loader.load(url, function(gltf) {
+        //set global
+        model = gltf.scene
+        model.traverse(function (child) {
+            if (child.isMesh) {
+                child.material = new THREE.MeshStandardMaterial({
+                    color: 0xffffff, // Set the base color
+                    metalness: 0.5, // Set the metalness value
+                    roughness: 0.5, // Set the roughness value
+                    envMapIntensity: 4, // Set the environment map intensity
+                    map: child.material.map, // Copy the existing texture map
+                    normalMap: child.material.normalMap, // Copy the existing normal map
+                });
+                child.receiveShadow = false
+                child.castShadow = true
+            }
+        });
+
+        //adjust model rotation, scale, position
+        model.rotation.y = Math.PI * equipment[currentEquipment].rotate.y
+        model.scale.set(
+            equipment[currentEquipment].scale.x,
+            equipment[currentEquipment].scale.y,
+            equipment[currentEquipment].scale.z
+        )
+        model.position.set(
+            equipment[currentEquipment].position.x,
+            equipment[currentEquipment].position.y,
+            equipment[currentEquipment].position.z
+        )
+
+        //add to scene
+        scene.add(model);
+        
+        
+    },
+    (xhr) => {
+        //console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+    },
+    (error) => {
+        console.log(error)
+    });
 }
 loadModel();
 
-scene.add(group);
-
 
 /* 
- * SUPPORTING ELEMENTS
+ * Environment
  */
 
 
@@ -817,41 +842,6 @@ function sweep(){
     timeline.play()
 }
 
-//change model to selected
-function changeModel(event){
-    console.log(group.children[0].isGLTFModel)
-
-    for (let i = group.children.length - 1; i >= 0; i--) {
-        const child = group.children[i];
-
-        // Check if the child is a GLTF model
-        if (child.isGLTFModel) {
-            // Remove the child from the group and dispose of its geometry and material
-            group.remove(child);
-            child.scene.traverse(function (obj) {
-                if (obj.isMesh) {
-                    obj.geometry.dispose();
-                    obj.material.dispose();
-                }
-            });
-        }
-    }
-    //remove old model
-    // group.remove(group);
-
-    // group.traverse( function( child ) {
-    //     if ( child instanceof THREE.Mesh ) {
-    //         child.geometry.dispose();
-    //         child.material.dispose();
-    //     }
-    // });
-
-    // //get new model id
-    // currentEquipment = parseInt(event.target.getAttribute('data-model'));
-    
-    // loadModel();
-    return false;
-}
 
 /* 
  * UI EVENTS
@@ -863,9 +853,10 @@ document.querySelector('.level').addEventListener('click',level);
 document.querySelector('.sweep').addEventListener('click',sweep);
 
 //assign model change buttons
-document.querySelectorAll('.changeModel').forEach(function(element,index){
+document.querySelectorAll('.replaceModel').forEach(function(element,index){
     element.addEventListener('click',function(e){
-        changeModel(e);
+        currentEquipment = parseInt(e.target.getAttribute('data-model'))
+        loadModel()
     })
 });
 
