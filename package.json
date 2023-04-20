@@ -1,5 +1,5 @@
 {
-  "name": "threejs-journey-exercise",
+  "name": "equipment-explorer",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,6 +13,8 @@
     "vite": "^4.0.4"
   },
   "dependencies": {
+    "@popperjs/core": "^2.11.7",
+    "bootstrap": "^5.2.3",
     "gsap": "^3.11.5",
     "lil-gui": "^0.18.1",
     "three": "^0.148.0",

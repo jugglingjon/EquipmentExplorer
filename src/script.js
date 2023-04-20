@@ -8,6 +8,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import gsap from 'gsap';
 import { TimelineMax } from 'gsap'
 import * as dat from 'lil-gui';
+import * as bootstrap from 'bootstrap'
 
 //Style Import
 import './style.scss';

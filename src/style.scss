@@ -1,3 +1,36 @@
+// 1. Include functions first (so you can manipulate colors, SVGs, calc, etc)
+@import "bootstrap/scss/functions";
+
+// 2. Include any default variable overrides here
+
+// 3. Include remainder of required Bootstrap stylesheets (including any separate color mode stylesheets)
+@import "theme";
+@import "bootstrap/scss/variables";
+
+// 4. Include any default map overrides here
+
+// 5. Include remainder of required parts
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/root";
+
+// 6. Optionally include any other parts as needed
+@import "bootstrap/scss/utilities";
+@import "bootstrap/scss/reboot";
+@import "bootstrap/scss/type";
+@import "bootstrap/scss/images";
+@import "bootstrap/scss/containers";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/helpers";
+
+// 7. Optionally include utilities API last to generate classes based on the Sass map in `_utilities.scss`
+@import "bootstrap/scss/utilities/api";
+
+// 8. Add additional custom code here
+@import "bootstrap/scss/bootstrap";
+
+$accent: $yellow;
+
 body, html{
     margin:0;
     padding:0;
@@ -13,8 +46,6 @@ body, html{
 
     .nav{
         position: fixed;
-        display: flex;
-        justify-content: center;
         bottom: 0;
         left:0;
         margin:0;
@@ -22,20 +53,29 @@ body, html{
         width: 100%;
 
         z-index:9999999999;
-        background:rgba(57, 57, 57, 0.595);
+        background: rgba($black, .6);
+        color: $white;
+        backdrop-filter: blur(5px);
 
         list-style-type:none;
+
+        .navbar-brand, .navbar-toggler, .navbar-toggler-icon{
+            color: $accent !important;
+        }
 
         li{
             
             a{
-                background: transparent;
-                padding: 2rem 4rem;
-                display: block;
-                border: 1px solid white;
-                margin: 10px;
-                color:white;
-                text-decoration: none;
+                @extend .py-4;
+                color: $white;
+
+                &:hover{
+                    color: $accent;
+                }
+
+                &:focus{
+                    color: inherit;
+                }
             }
         }
     }
