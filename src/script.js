@@ -525,6 +525,7 @@ function loadModel(callback) {
 
         //change text
         //loadText()
+        document.getElementsByClassName('equipment-name')[0].innerHTML =  equipment[currentEquipment].name
         
         
     },
