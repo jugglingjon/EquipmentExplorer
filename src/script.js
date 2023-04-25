@@ -6,7 +6,9 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import gsap from 'gsap';
-import { TimelineMax } from 'gsap'
+import { TimelineMax } from 'gsap/all'
+import { TweenMax } from 'gsap/all'
+import { Power0 } from 'gsap/all'
 import * as dat from 'lil-gui';
 import * as bootstrap from 'bootstrap'
 
@@ -70,7 +72,7 @@ let currentEquipment = 0;
 const equipment =[
     {
         name: 'M1A1',
-        filename: 'm1a1.glb',
+        filename: 'm1a1-named.glb',
         type: 0,
         path: '/m1a1',
         scale: 1,
@@ -453,6 +455,12 @@ const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath( '/examples/jsm/libs/draco/' );
 loader.setDRACOLoader( dracoLoader );
 
+const hiddenMaterial = new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    transparent: true,
+    opacity: 0.2
+})
+
 //loads model
 function loadModel(callback) {
     //remove old model if exists
@@ -462,6 +470,7 @@ function loadModel(callback) {
             if (child instanceof THREE.Mesh) {
                 child.geometry.dispose();
                 child.material.dispose();
+                child.backupMaterial.dispose();
                 if(child.material.map) child.material.map.dispose();
                 if(child.material.aoMap) child.material.aoMap.dispose();
                 if(child.material.displacementMap) child.material.displacementMap.dispose();
@@ -481,18 +490,20 @@ function loadModel(callback) {
     loader.load(url, function(gltf) {
         //set global
         model = gltf.scene
+        console.log(model)
         model.traverse(function (child) {
             if (child.isMesh) {
-                child.material = new THREE.MeshStandardMaterial({
-                    color: 0xffffff, // Set the base color
-                    metalness: 0.5, // Set the metalness value
-                    roughness: 0.5, // Set the roughness value
-                    envMapIntensity: 4, // Set the environment map intensity
-                    map: child.material.map, // Copy the existing texture map
-                    normalMap: child.material.normalMap, // Copy the existing normal map
-                });
+                // child.material = new THREE.MeshStandardMaterial({
+                //     color: 0xffffff, // Set the base color
+                //     metalness: 0.5, // Set the metalness value
+                //     roughness: 0.5, // Set the roughness value
+                //     envMapIntensity: 4, // Set the environment map intensity
+                //     map: child.material.map, // Copy the existing texture map
+                //     normalMap: child.material.normalMap, // Copy the existing normal map
+                // });
                 child.receiveShadow = false
                 child.castShadow = true
+                child.backupMaterial = child.material
             }
         });
 
@@ -513,7 +524,7 @@ function loadModel(callback) {
         scene.add(model);
 
         //change text
-        loadText()
+        //loadText()
         
         
     },
@@ -525,6 +536,28 @@ function loadModel(callback) {
     });
 }
 loadModel();
+
+/* 
+ * FILTER
+ */
+
+function filterModel(category)
+{
+    console.log('running')
+    model.traverse((child)=>
+        {
+            if (child.isMesh){
+                if(child.name.startsWith(`ID-${category}`)){
+                    child.material = child.backupMaterial
+                }
+                else{
+                    child.material = hiddenMaterial
+                    console.log('hide')
+                }
+            } 
+        }
+    )
+}
 
 
 /* 
@@ -702,51 +735,51 @@ scene.add(dust);
 
 
 //TEXT
-const fontLoader = new FontLoader()
-let text = null
+// const fontLoader = new FontLoader()
+// let text = null
 
-function loadText(){
-    fontLoader.load(
-        '/fonts/droid/droid_sans_bold.typeface.json',
-        (font)=>{
-            if (text !== null){
-                scene.remove(text)
-                text.material.dispose()
-                text.geometry.dispose()
-            }
-            const textGeometry = new TextGeometry(
-                equipment[currentEquipment].name,
-                {
-                    font,
-                    size: 4,
-                    height: 0.5,
-                    curveSegments: 12,
-                    bevelEnabled: true,
-                    bevelThickness: 0.03,
-                    bevelSize: 0.02,
-                    bevelOffset: 0,
-                    bevelSegments: 4
+// function loadText(){
+//     fontLoader.load(
+//         '/fonts/droid/droid_sans_bold.typeface.json',
+//         (font)=>{
+//             if (text !== null){
+//                 scene.remove(text)
+//                 text.material.dispose()
+//                 text.geometry.dispose()
+//             }
+//             const textGeometry = new TextGeometry(
+//                 equipment[currentEquipment].name,
+//                 {
+//                     font,
+//                     size: 4,
+//                     height: 0.5,
+//                     curveSegments: 12,
+//                     bevelEnabled: true,
+//                     bevelThickness: 0.03,
+//                     bevelSize: 0.02,
+//                     bevelOffset: 0,
+//                     bevelSegments: 4
 
-                }
-            )
-            textGeometry.computeBoundingBox();
-            const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
-            const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
-            textGeometry.translate(-textWidth / 2, 0, 0);
+//                 }
+//             )
+//             textGeometry.computeBoundingBox();
+//             const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+//             const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
+//             textGeometry.translate(-textWidth / 2, 0, 0);
 
-            const textMaterial = new THREE.MeshStandardMaterial({ color: 0x6d5026})
-            gui.addColor(textMaterial,'color')
-            textMaterial.opacity = .7
-            //textMaterial.transparent = true
-            const textMesh = new THREE.Mesh(textGeometry,textMaterial)
-            textMesh.position.z = -12
-            textMesh.castShadow = true
-            text = textMesh
-            scene.add(text)
+//             const textMaterial = new THREE.MeshStandardMaterial({ color: 0x6d5026})
+//             gui.addColor(textMaterial,'color')
+//             textMaterial.opacity = .7
+//             //textMaterial.transparent = true
+//             const textMesh = new THREE.Mesh(textGeometry,textMaterial)
+//             textMesh.position.z = -12
+//             textMesh.castShadow = true
+//             text = textMesh
+//             scene.add(text)
             
-        }
-    )
-}
+//         }
+//     )
+// }
 
 
 //FOG
@@ -894,21 +927,83 @@ function sweep(){
     timeline.play()
 }
 
+function turret(){
+    gsap.to(camera.position,{
+        x: -3.3092789432150562,
+        y: 2.9815695063413767,
+        z: 4.402007116704356, 
+        duration: 2, 
+        delay: 0
+    });
+    return false;
+}
+
+function circle(){
+    const orbitTimeline = new TimelineMax();
+    
+    orbitTimeline.to(camera.position, 5, {
+        x: Math.sin(0) * 10,
+        z: Math.cos(0) * 10,
+        ease: Power0.easeNone,
+    });
+    
+    for (let i = 1; i < 360; i++) {
+        orbitTimeline.to(camera.position, 5 / 360, {
+            x: Math.sin(i * Math.PI / 180) * 10,
+            z: Math.cos(i * Math.PI / 180) * 10,
+            ease: Power0.easeNone,
+        });
+    }
+    
+    orbitTimeline.to(camera.position, 5 / 360, {
+        x: Math.sin(0) * 10,
+        z: Math.cos(0) * 10,
+        ease: Power0.easeNone,
+        onComplete: function() {
+            camera.lookAt(0, 0, 0);
+        },
+    });
+    return false;
+}
+
 
 /* 
  * UI EVENTS
  */
 
+document.addEventListener('keydown', function(event) {
+    if (event.key === 't') {
+        // execute your function here
+        turret()
+    }
+    if (event.key === 'c') {
+        // execute your function here
+        circle()
+    }
+});
+
 //assign buttons
 document.querySelector('.above').addEventListener('click',above);
 document.querySelector('.level').addEventListener('click',level);
 document.querySelector('.sweep').addEventListener('click',sweep);
+//document.querySelector('.turret').addEventListener('click',turret);
+//document.querySelector('.circle').addEventListener('click',circle);
 
 //assign model change buttons
 document.querySelectorAll('.replaceModel').forEach(function(element,index){
     element.addEventListener('click',function(e){
         currentEquipment = parseInt(e.target.getAttribute('data-model'))
         loadModel()
+    })
+});
+
+//assign filter change buttons
+document.querySelectorAll('.filter').forEach(function(element,index){
+    element.addEventListener('click',function(e){
+        console.log('clicked')
+        const filter = e.target.getAttribute('data-category')
+        console.log(filter)
+        filterModel(filter)
     })
 });
 
